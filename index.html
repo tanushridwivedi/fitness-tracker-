@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PULSE // Fitness Progress Dashboard</title>
+
+<!-- Google Fonts: Oswald for condensed athletic headlines, Inter for body copy, JetBrains Mono for data/stat figures -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Chart.js for Weekly Calories + Category Distribution charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<header class="topbar">
+  <div class="wordmark">PULSE<span class="wordmark-slash">//</span>FIT</div>
+  <div class="topbar-right">
+    <span id="navProfileName" class="nav-profile-name hidden"></span>
+    <button id="resetBtn" class="btn btn-ghost hidden">Reset Profile</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section id="onboarding" class="onboarding">
+    <div class="onboarding-hero">
+      <h1 class="hero-title">Know your numbers.<br>Train with intent.</h1>
+      <p class="hero-sub">Drop in your stats once — Pulse builds the workout split, the meal targets and the tracking board around them automatically.</p>
+      <div class="hero-strip">
+        <figure class="hero-strip-img">
+          <img src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=600&q=60" alt="Sprinter driving out of the blocks on an outdoor track" loading="lazy">
+          <figcaption>Running</figcaption>
+        </figure>
+        <figure class="hero-strip-img">
+          <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=60" alt="Person holding a floor yoga mobility pose" loading="lazy">
+          <figcaption>Yoga</figcaption>
+        </figure>
+        <figure class="hero-strip-img">
+          <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=600&q=60" alt="Dumbbells set up for a home strength workout" loading="lazy">
+          <figcaption>Home Workout</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <form id="profileForm" class="profile-card" autocomplete="off">
+      <h2 class="card-heading">Build your profile</h2>
+
+      <div class="field-row">
+        <label for="userName">Name</label>
+        <input type="text" id="userName" name="userName" placeholder="e.g. Tanushri" required>
+      </div>
+
+      <div class="field-grid">
+        <div class="field-row">
+          <label for="userAge">Age</label>
+          <input type="number" id="userAge" name="userAge" min="10" max="90" placeholder="21" required>
+        </div>
+        <div class="field-row">
+          <label for="userGender">Gender</label>
+          <select id="userGender" name="userGender" required>
+            <option value="" disabled selected>Select</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field-row">
+          <label for="userHeight">Height (cm)</label>
+          <input type="number" id="userHeight" name="userHeight" min="100" max="230" placeholder="165" required>
+        </div>
+        <div class="field-row">
+          <label for="userWeight">Weight (kg)</label>
+          <input type="number" id="userWeight" name="userWeight" min="30" max="200" placeholder="60" required>
+        </div>
+      </div>
+
+      <fieldset class="field-row diet-toggle">
+        <legend>Diet preference</legend>
+        <div class="toggle-pair">
+          <input type="radio" id="dietVeg" name="diet" value="vegetarian" checked>
+          <label for="dietVeg" class="toggle-pill">Vegetarian</label>
+          <input type="radio" id="dietNonVeg" name="diet" value="non-vegetarian">
+          <label for="dietNonVeg" class="toggle-pill">Non-Vegetarian</label>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary btn-full">Calculate BMI &amp; Build My Plan</button>
+    </form>
+  </section>
+
+  <!-- ============ DASHBOARD (hidden until profile exists) ============ -->
+  <section id="dashboard" class="dashboard hidden">
+
+    <!-- Profile / BMI summary -->
+    <section class="bmi-summary">
+      <div class="bmi-figure">
+        <span class="bmi-figure-label">Body Mass Index</span>
+        <span id="bmiValue" class="bmi-figure-value">--</span>
+        <span id="bmiCategory" class="bmi-figure-tag">--</span>
+      </div>
+      <div class="bmi-meta">
+        <p><span id="summaryGreeting">Welcome</span> — here's where your plan stands today.</p>
+        <div class="bmi-meta-row">
+          <div class="bmi-meta-item">
+            <span class="bmi-meta-label">Recommended Goal</span>
+            <span id="summaryGoal" class="bmi-meta-value">--</span>
+          </div>
+          <div class="bmi-meta-item">
+            <span class="bmi-meta-label">Diet Preference</span>
+            <span id="summaryDiet" class="bmi-meta-value">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stat counters -->
+    <section class="stats-grid" aria-label="Real-time activity stats">
+      <div class="stat-card">
+        <span class="stat-label">Workouts Logged</span>
+        <span id="statWorkouts" class="stat-value">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Calories Burned</span>
+        <span id="statCalories" class="stat-value">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Minutes</span>
+        <span id="statMinutes" class="stat-value">0</span>
+      </div>
+      <div class="stat-card stat-card-hydration">
+        <span class="stat-label">Hydration Today</span>
+        <span id="statHydration" class="stat-value">0<small>ml</small></span>
+        <button id="hydrateBtn" class="btn btn-mini">+250ml</button>
+      </div>
+    </section>
+
+    <!-- Personalized plan -->
+    <section class="plan-section">
+      <div class="plan-card">
+        <h3 class="card-heading">Daily Workout Routine</h3>
+        <div id="workoutPlan" class="plan-body"></div>
+      </div>
+      <div class="plan-card">
+        <h3 class="card-heading">Meal Plan <span id="planDietTag" class="plan-tag"></span></h3>
+        <div id="mealPlan" class="plan-body"></div>
+      </div>
+    </section>
+
+    <!-- Tracker -->
+    <section class="tracker-section">
+      <h3 class="card-heading">Log a Workout</h3>
+
+      <div class="exercise-selector" id="exerciseSelector">
+        <button type="button" class="exercise-card" data-type="running">
+          <img src="https://images.unsplash.com/photo-1502904550040-7534597429ae?auto=format&fit=crop&w=500&q=60" alt="Runner on an open road" loading="lazy">
+          <span>Running / Cardio</span>
+        </button>
+        <button type="button" class="exercise-card" data-type="yoga">
+          <img src="https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?auto=format&fit=crop&w=500&q=60" alt="Person in a seated yoga stretch" loading="lazy">
+          <span>Yoga / Mobility</span>
+        </button>
+        <button type="button" class="exercise-card" data-type="home">
+          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=500&q=60" alt="Bodyweight home workout push-up position" loading="lazy">
+          <span>Home Workout</span>
+        </button>
+      </div>
+
+      <form id="workoutForm" class="logger-form">
+        <input type="hidden" id="selectedType" name="selectedType" required>
+        <div class="field-grid field-grid-3">
+          <div class="field-row">
+            <label for="workoutDuration">Duration (min)</label>
+            <input type="number" id="workoutDuration" min="1" max="300" placeholder="30" required>
+          </div>
+          <div class="field-row">
+            <label for="workoutCalories">Calories (auto)</label>
+            <input type="number" id="workoutCalories" min="0" max="3000" placeholder="0">
+          </div>
+          <div class="field-row">
+            <label for="workoutDate">Date</label>
+            <input type="date" id="workoutDate" required>
+          </div>
+        </div>
+        <p id="loggerHint" class="logger-hint">Pick an exercise type above to start logging.</p>
+        <button type="submit" class="btn btn-primary btn-full">Add to Activity Log</button>
+      </form>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-section">
+      <div class="chart-card">
+        <h3 class="card-heading">Weekly Calories vs Target</h3>
+        <canvas id="caloriesChart" role="img" aria-label="Bar chart of calories burned this week against target"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3 class="card-heading">Exercise Category Split</h3>
+        <canvas id="categoryChart" role="img" aria-label="Doughnut chart of exercise category distribution"></canvas>
+      </div>
+    </section>
+
+    <!-- Recent activities -->
+    <section class="activity-section">
+      <h3 class="card-heading">Recent Activities</h3>
+      <ul id="activityLog" class="activity-log"></ul>
+    </section>
+
+  </section>
+</main>
+
+<footer class="site-footer">
+  Built for Codtech Frontend Web Development Internship — Task 3.
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
